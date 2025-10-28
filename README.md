@@ -10,6 +10,10 @@ are stored in the Arduino's [EEPROM](https://wokwi.com/playground/eeprom), so
 the code isn't wiped even when the power goes off.
 
 =====Fork======
+v1.2 
+
+1. Arbitrary secret code length. Minimum and maximum symbols can be configured. Symbol '#' should be entered at the very end if code length is less then maximum.
+
 v1.1
 
 1. Alpha symbols available for the code
