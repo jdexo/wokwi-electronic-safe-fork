@@ -68,6 +68,8 @@ Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, KEYPAD_ROWS, KEYPAD_C
 
 /* SafeState stores the secret code in EEPROM */
 SafeState safeState;
+#define SAFE_STATE_CODE_LEN_MIN 4
+#define SAFE_STATE_CODE_LEN_MAX 10
 
 void lock() {
     lockServo.write(SERVO_LOCK_POS);
@@ -84,7 +86,7 @@ void showStartupMessage() {
     delay(1000);
 
     lcd.setCursor(0, 1);
-    String message = "ArduinoSafe v1.0";
+    String message = "ArduinoSafe v1.2";
     for (byte i = 0; i < message.length(); i++) {
         lcd.print(message[i]);
         delay(100);
@@ -93,18 +95,31 @@ void showStartupMessage() {
 }
 
 String inputSecretCode() {
-    lcd.setCursor(5, 1);
-    lcd.print("[____]");
     lcd.setCursor(6, 1);
+    lcd.print("[_]");
+    lcd.setCursor(7, 1);
     String result = "";
-    while (result.length() < 4) {
+    while (result.length() < SAFE_STATE_CODE_LEN_MAX
+    ) {
         char key = keypad.getKey();
+    
+        if (key == '#' && result.length() >= SAFE_STATE_CODE_LEN_MIN) {
+            return result;
+        }
+        
         if ((key >= '0' && key <= '9') || (key >= 'A' && key <= 'D')
         ) {
-            lcd.print('*');
             result += key;
+            byte curPos = (16 - (result.length() + 2))/2;
+            lcd.setCursor(curPos, 1);
+            lcd.print("[");
+            for (byte i = 0; i < result.length(); i++) {
+                lcd.print("*");
+            }
+            lcd.print("]");
         }
     }
+
     return result;
 }
 
@@ -215,8 +230,8 @@ void safeLockedLogic() {
         lcd.clear();
         lcd.setCursor(0, 0);
         lcd.print("Access Denied!");
-        showWaitScreen(500);
         rateLimiterIsNotAccepted();
+        showWaitScreen(500);
     }
 }
 
@@ -233,7 +248,6 @@ void showBlockScreen(long* millis) {
         lcd.print(timeLeft[i]);
     }
     delay(500);
-
 }
 
 void setup() {
@@ -255,7 +269,6 @@ void setup() {
 }
 
 void loop() {
-
     //Block screen
     long leftMillis;
     do {
